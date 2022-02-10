@@ -34,6 +34,8 @@ On voit que le jeu de données comprend 3716 observations et 17 variables, décr
 recidive = recidive[,-c(1,2,3)]
 View(recidive)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/86a3dd2dedf5162d4aa6ef53416434b60e6f50d6/images/var_type.png)
+
 On retire les colonnes "New Offense Classification", "New Offense Type" et "New Offense Sub Type"; elles ne seront pas pris en compte dans notre analyse.
 
 *On identifie les deux variables nécessaires à l'analyse de survie : 
@@ -98,6 +100,8 @@ recidive<-recidive%>%
 library(asaur)
 table(recidive$return_prison)/nrow(recidive)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/censure.png)
+
 On remarque une censure importante à 69%, c'est-à-dire d'invidus que l'on a perdus de vue lors du suivi, et 30% d'invidus non censurés ayant récidivé.
 
 
@@ -121,6 +125,8 @@ ggsurvplot(KM0,
            conf.int = TRUE,
            risk.table = TRUE)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/km_plot.png)
+
 La courbe est décroissante mais quasi horizontale, on observe pas pas de chute brutale. Le point de chute, qui est léger, semble appaître aux environs des 250 jours. 
 #Estimation de Kaplan-Meier selon certaines variables
 
@@ -138,6 +144,8 @@ library(survminer)
 ggsurvplot(KM_sex,
            risk.table = TRUE)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/km_sex.png)
+
 L'écart est faible, mais le taux de survie est plus élevé chez les femmes que chez les hommes. Il y a donc moins de femmes qui récidivent que d'hommes. On peut cependant supposer que ce résultat s'explique également par le fait qu'il y ait plus d'hommes que de femmes qui ont été libérés (donc plus d'hommes incarcérés au départ), aussi ils sont statistiquement plus à risque de récidiver.
 
 ```r
@@ -149,6 +157,8 @@ summary(KM_age_release, times= seq(0,500,50))
 ggsurvplot(KM_age_release,
            risk.table = TRUE)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/km_age.png)
+
 On observe les plus de 55 ans ont le taux de survie le plus élévé; ils récidivent donc le moins. A l'inverse, les moins de 35 ans (moins de 25 ans et 25-34) ont les taux de survie les plus faibles, ils sont récidives donc plus. 
 
 ```r
@@ -160,6 +170,8 @@ summary(KM_age_release, times= seq(0,500,50))
 ggsurvplot(KM_age_release,
            risk.table = TRUE)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/km_population.png)
+
 Les individus déjà ciblés par le système carcéral récidivent plus que ceux non ciblés.
 
 ```r
@@ -172,6 +184,8 @@ ggsurvplot(KM_sex,
            facet.by = 'age',
            risk.table = TRUE)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/sex_age_km.png)
+
 Les résultats ne diffèrennt ici pas de l'estimation non paramétrique globale en fonction de la variable âge, sauf pour deux catégories : 
 - les 45-54 ans, où les courbes se confondent presque, et le taux de survie pour les hommes est infimement supérieur à celui des femmes à la fin de l'étude
 - les 55 ans et plus, où l'on voit une courbe de survie pour les hommes supérieur à celui des femmes. Cependant, on observe aussi une censure plus présente pour la courbe de survie des femmes (décroissance par palliers beaucoup plus marquée) 
@@ -186,6 +200,8 @@ ggsurvplot(KM_age_release,
            facet.by = 'age',
            risk.table = TRUE)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/age_target_km.png)
+
 On ne remarque pas ici de grosses différences avec la courbe globe de survie pour la variable target_population : les individus ciblés au préalable par le système carcéral sont plus susceptibles de récidiver, quelle que soit la tranche d'âge. On peut en revanche apporter quelques précisons : 
 - pour la catégorie des 45-54 ans, les courbes sont très proches et se rejoinent même à la fin du temps étudié
 - pour les moins de 25 ans, on remrque une divergeance des courbes dès les 100 premiers jours. Les individus de cette catégorie sont donc les plus à risque de récidiver.
@@ -204,7 +220,7 @@ survdiff(Surv(return_time,return_prison)~sex,data=recidive)
 survdiff(Surv(return_time,return_prison)~age,data=recidive) 
 #inférieure à 5% -> hypothèse nulle rejetée
 ```
-
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/log-rank.png)
 
 #Régression de Cox
 
@@ -226,6 +242,8 @@ library(GGally)
 library(car)
 ggcoef_model(cox1, exponentiate = F)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/cox-plot.png)
+
 La figure du modèle confirme les résultats ci-dessus.
 
 #Vérification avec le critère d'Akaike
@@ -239,6 +257,8 @@ library(survival)
 library(publish)
 cox1_recidive <- step(cox1)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/AIC.png)
+
 On a bien les variables explicatives sex et age 
 
 #Validité
@@ -256,20 +276,10 @@ verif <- cox.zph(cox1_recidive)
 library(survminer)
 ggcoxzph(verif)
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/schoenfeld.png)
+
 Le modèle est valide si les Hazard Ratios que l'on a obtenus sont proportionnels aux risques. 
 Pour la variable âge : la valeur de p est inférieure à 0.05, aussi son indépendance n'est pas vérifiée.
 Pour la variable sexe : la valeur de p est supérieure à 0.05, son indépence est donc vérifié.
 
 ** Conclusion : Suite à note étude, on peut dire que le sexe masculin, le jeune âge (moins de 34 ans) mais aussi le fait d'être déjà ciblé par le système carcéral peuvent être des facteurs de récidives. **
-© 2022 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Docs
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
