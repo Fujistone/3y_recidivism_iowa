@@ -1,45 +1,22 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@Fujistone 
-Fujistone
-/
-3y_recidivism_iowa
-Public
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-3y_recidivism_iowa/3Y_Recidivism.Rmd
-@Fujistone
-Fujistone Add files via upload
-Latest commit 7fd73de 7 days ago
- History
- 1 contributor
-243 lines (212 sloc)  10.7 KB
-   
+
 ---
-title: "Recidivisme sur 3 ans dans les prisons de l'Iowa, aux USA"
-author: "Uzma UNIA - MéDas 2 - 2020-2022"
+Recidivisme sur 3 ans dans les prisons de l'Iowa, aux USA
 ---
-```{r setup, include=FALSE}
+Uzma UNIA 
+
+```r
+{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 **Analyse de survie sur des données de récidivisme dans l'Etat de l'IOWA, aux USA**
+---
 A l'origine le jeu de données comprend 5 années fiscales; on choisira ici de faire l'analyse en prenant en compte uniquement les données enregistrées pour l'année 2010.
 Les individus sont suivis sur une période de 3 ans depuis l'année de libération (ici sur les années 2010, 2012 et 2013).
 On cherche à identifier quelles sont les facteurs de récidives durant cette période.
+
 #Préparer les données
-```{r,echo=F}
+```r
+{r,echo=F}
 #Charger les libraires
 library(readr)
 library(dplyr)
@@ -51,7 +28,8 @@ View(recidive)
 ```
 On voit que le jeu de données comprend 3716 observations et 17 variables, décrivant différentes caractéristiques des individus mis en liberté en 2010.
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #Retirer les colonnes non pertinentes
 recidive = recidive[,-c(1,2,3)]
 View(recidive)
@@ -61,21 +39,24 @@ On retire les colonnes "New Offense Classification", "New Offense Type" et "New 
 *On identifie les deux variables nécessaires à l'analyse de survie : 
 - la variable évènementiellle "Return to Prison" 
 - la variable temporelle "Days to Return"*
-```{r,echo=F}
+```r
+{r,echo=F}
 #Numériser la colonne "Return to Prison"
 recidive$`Return to Prison`[recidive$`Return to Prison` == "Yes"] = 1 #Oui récidive
 recidive$`Return to Prison`[recidive$`Return to Prison` == "No"] = 0 #non pas récidive
 recidive$`Return to Prison` = as.numeric(recidive$`Return to Prison`)
 ```
 Nous avons recodé la variable "Return to Prison" qui était de type "character" en "numeric" afin de la rendre exploitabl pour l'analyse.
-```{r,echo=F}
+```r
+{r,echo=F}
 #Transformer les entrées de la colonne "Days to Return"
 recidive = mutate_if(recidive, is.numeric, ~replace(., is.na(.), 365*3))
 recidive$`Days to Return` = as.numeric(recidive$`Days to Return`)
 ```
 De même, nous avons recodé la variable "Days to Return" de manière à pouvoir l'utiliser dans l'analyse.On fixe à 1095 jours soit 365*3 jours maximum les évéènements"temps" pour les individus n'ayant pas récidivé au cours de la période étudiée.
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #Renommer les colonnes
 colnames(recidive)[colnames(recidive) %in% c("Return to Prison", "Days to Return")] <- c("return_prison", "return_time")
 colnames(recidive)[colnames(recidive) %in% c("Release Type", "Race - Ethnicity")] <- c("release_type", "race")
@@ -89,7 +70,8 @@ View(recidive)
 ```
 
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #Factoriser les variables pour faciliter l'analyse
 library(dplyr)
 library(labelled)
@@ -110,7 +92,8 @@ recidive<-recidive%>%
   )
 ```
 
-```{r}
+```r
+{r}
 #Censure
 library(asaur)
 table(recidive$return_prison)/nrow(recidive)
@@ -119,7 +102,8 @@ On remarque une censure importante à 69%, c'est-à-dire d'invidus que l'on a pe
 
 
 #Estimation non paramétrique de Kapaln-Meier 
-```{r,echo=F}
+```r
+{r,echo=F}
 library(survival)
 KM0 <- survfit(Surv(recidive$return_time, recidive$return_prison)~1,data = recidive)
 print(KM0)
@@ -127,7 +111,8 @@ summary(KM0, times= seq(0,500,50))
 ```
 On peut remarquer que la médiane vaut NA car le taux de d'invidus censurés > non censurés, aussi la survie n'est pas atteinte de manière globale. En effet, la survie reste décroissante au cours du temps. Moins de 50% des personnes libérées en 2010 ont donc récidivé surt la période analysée.
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #courbe globale de Kapalan-Meier
 library(survminer)
 ggsurvplot(KM0, 
@@ -144,7 +129,8 @@ On choisit d'étudier la survie en fonction de 3 variables :
 - l'âge à la sortie (age)
 - le ciblâge de l'individu par le système carcéral (target population)
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #En fonction du sexe
 KM_sex <- survfit(Surv(recidive$return_time, recidive$return_prison)~sex,data = recidive)
 summary(KM_sex, times= seq(0,500,50))
@@ -154,7 +140,8 @@ ggsurvplot(KM_sex,
 ```
 L'écart est faible, mais le taux de survie est plus élevé chez les femmes que chez les hommes. Il y a donc moins de femmes qui récidivent que d'hommes. On peut cependant supposer que ce résultat s'explique également par le fait qu'il y ait plus d'hommes que de femmes qui ont été libérés (donc plus d'hommes incarcérés au départ), aussi ils sont statistiquement plus à risque de récidiver.
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #En fonction de l'âge
 library(survminer)
 KM_age_release <- survfit(Surv(recidive$return_time, recidive$return_prison)~age,data = recidive)
@@ -164,7 +151,8 @@ ggsurvplot(KM_age_release,
 ```
 On observe les plus de 55 ans ont le taux de survie le plus élévé; ils récidivent donc le moins. A l'inverse, les moins de 35 ans (moins de 25 ans et 25-34) ont les taux de survie les plus faibles, ils sont récidives donc plus. 
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #En fonction du ciblage
 library(survminer)
 KM_age_release <- survfit(Surv(recidive$return_time,recidive$return_prison)~target_population,data = recidive)
@@ -174,7 +162,8 @@ ggsurvplot(KM_age_release,
 ```
 Les individus déjà ciblés par le système carcéral récidivent plus que ceux non ciblés.
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #En fonction du sexe peut importe l'âge
 KM_sex_age <- survfit(Surv(recidive$return_time, recidive$return_prison)~sex,data = recidive)
 summary(KM_sex_age, times= seq(0,500,50))
@@ -187,7 +176,8 @@ Les résultats ne diffèrennt ici pas de l'estimation non paramétrique globale 
 - les 45-54 ans, où les courbes se confondent presque, et le taux de survie pour les hommes est infimement supérieur à celui des femmes à la fin de l'étude
 - les 55 ans et plus, où l'on voit une courbe de survie pour les hommes supérieur à celui des femmes. Cependant, on observe aussi une censure plus présente pour la courbe de survie des femmes (décroissance par palliers beaucoup plus marquée) 
 
-```{r,echo=F}
+```r
+{r,echo=F}
 #En fonction du ciblage peut importe l'âge
 library(survminer)
 KM_age_release <- survfit(Surv(recidive$return_time, recidive$return_prison)~target_population,data = recidive)
@@ -204,7 +194,8 @@ On ne remarque pas ici de grosses différences avec la courbe globe de survie po
 
  ** On pose H0 = S_female(t) = S_male(t) **
  
-```{r,echo=F}
+```r
+{r,echo=F}
 library(survival)
 library(prodlim)
 #H0 = pas de diff significative entre les 2 groupes #H1 = diff entre les 2 groupes
@@ -218,7 +209,8 @@ survdiff(Surv(return_time,return_prison)~age,data=recidive)
 #Régression de Cox
 
 On construit un modèle multivarié en fonction des variables age et sex. 
-```{r, echo=FALSE}
+```r
+{r, echo=FALSE}
 library(survival)
 library(Publish)
 cox1<-coxph(Surv(return_time,return_prison)~ age + sex, data = recidive)
@@ -226,7 +218,8 @@ cox1 %>% publish()
 ```
 Les résultats nous montrent que l'âge jeune est facteur de récidive, avec un taux de risque relatif (Hazard Ratio) à 1.03 par rapport à toutes autre catégories d'âge dont le Hazard Ratio est inférieur à 1. 
 Similairement, le sexe masculin est facteur de récidive; on observe un Hazard Ratio à 1.30. 
-```{r,echo=F}
+```r
+{r,echo=F}
 library(broom)
 library(gtsummary)
 library(GGally)
@@ -238,7 +231,8 @@ La figure du modèle confirme les résultats ci-dessus.
 #Vérification avec le critère d'Akaike
 
 Le critère d'Akaike (Aikaike Information Criterion ou AIC) est outil que l'on utilise ici pour augmenter la vraisemblance de notre modèle
-```{r,echo=F}
+```r
+{r,echo=F}
 #vérification du modèle
 #crtière d'AIC
 library(survival)
@@ -248,14 +242,16 @@ cox1_recidive <- step(cox1)
 On a bien les variables explicatives sex et age 
 
 #Validité
-```{r,echo=F}
+```r
+{r,echo=F}
 #validité modèle
 library(survival)
 verif <- cox.zph(cox1_recidive)
 ```
 
 #Tracé des résidus de Schoenfeld
-```{r,echo=F}
+```r
+{r,echo=F}
 #plot
 library(survminer)
 ggcoxzph(verif)
