@@ -235,6 +235,7 @@ cox1<-coxph(Surv(return_time,return_prison)~ age + sex, data = recidive)
 cox1 %>% publish()
 ```
 ![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/cox_table.png)
+
 Les résultats nous montrent que l'âge jeune est facteur de récidive, avec un taux de risque relatif (Hazard Ratio) à 1.03 par rapport à toutes autre catégories d'âge dont le Hazard Ratio est inférieur à 1. 
 Similairement, le sexe masculin est facteur de récidive; on observe un Hazard Ratio à 1.30. 
 ```r
