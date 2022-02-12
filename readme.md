@@ -115,6 +115,8 @@ summary(KM0, times= seq(0,500,50))
 ```
 On peut remarquer que la médiane vaut NA car le taux de d'invidus censurés > non censurés, aussi la survie n'est pas atteinte de manière globale. En effet, la survie reste décroissante au cours du temps. Moins de 50% des personnes libérées en 2010 ont donc récidivé surt la période analysée.
 
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/unknown.png)
+
 ```r
 {r,echo=F}
 #courbe globale de Kapalan-Meier
@@ -232,6 +234,7 @@ library(Publish)
 cox1<-coxph(Surv(return_time,return_prison)~ age + sex, data = recidive)
 cox1 %>% publish()
 ```
+![](https://github.com/Fujistone/3y_recidivism_iowa/blob/main/images/cox_table.png)
 Les résultats nous montrent que l'âge jeune est facteur de récidive, avec un taux de risque relatif (Hazard Ratio) à 1.03 par rapport à toutes autre catégories d'âge dont le Hazard Ratio est inférieur à 1. 
 Similairement, le sexe masculin est facteur de récidive; on observe un Hazard Ratio à 1.30. 
 ```r
